@@ -11,17 +11,18 @@
 #define SRC_ACTOR_SESSION_SESSION_HPP_
 
 #include <queue>
-#include "labor/Worker.hpp"
 #include "actor/DynamicCreator.hpp"
-#include "SessionModel.hpp"
+#include "actor/Actor.hpp"
 
 namespace neb
 {
 
-class Session: public SessionModel
+class ActorBuilder;
+
+class Session: public Actor
 {
 public:
-    Session(uint32 ulSessionId, ev_tstamp dSessionTimeout = 60.0);
+    Session(uint32 uiSessionId, ev_tstamp dSessionTimeout = 60.0);
     Session(const std::string& strSessionId, ev_tstamp dSessionTimeout = 60.0);
     Session(const Session&) = delete;
     Session& operator=(const Session&) = delete;
@@ -31,6 +32,11 @@ public:
      * @brief 会话超时回调
      */
     virtual E_CMD_STATUS Timeout() = 0;
+
+    const std::string& GetSessionId() const
+    {
+        return(m_strSessionId);
+    }
 
     /**
      * @brief 检查Session内数据是否已加载
@@ -53,51 +59,20 @@ public:
     void SetLoading(); 
 
 protected:
-    template <typename ...Targs> void Logger(int iLogLevel, const char* szFileName, unsigned int uiFileLine, const char* szFunction, Targs... args);
-    template <typename ...Targs> std::shared_ptr<Step> MakeSharedStep(const std::string& strStepName, Targs... args);
-    template <typename ...Targs> std::shared_ptr<Session> MakeSharedSession(const std::string& strSessionName, Targs... args);
-    template <typename ...Targs> std::shared_ptr<Cmd> MakeSharedCmd(const std::string& strCmdName, Targs... args);
-    template <typename ...Targs> std::shared_ptr<Module> MakeSharedModule(const std::string& strModuleName, Targs... args);
+    // 这两个构造函数专为Timer而用，其他Session子类不可使用
+    Session(ACTOR_TYPE eActorType, uint32 ulSessionId, ev_tstamp dSessionTimeout = 60.0);
+    Session(ACTOR_TYPE eActorType, const std::string& strSessionId, ev_tstamp dSessionTimeout = 60.0);
 
 private:
     uint32 PopWaitingStep();
 
 private:
-    friend class WorkerImpl;
     bool m_bDataReady;
     bool m_bDataLoading;
+    std::string m_strSessionId;
     std::queue<uint32> m_vecWaitingStep;
+    friend class ActorBuilder;
 };
-
-template <typename ...Targs>
-void Session::Logger(int iLogLevel, const char* szFileName, unsigned int uiFileLine, const char* szFunction, Targs... args)
-{
-    m_pWorker->Logger(m_strTraceId, iLogLevel, szFileName, uiFileLine, szFunction, std::forward<Targs>(args)...);
-}
-
-template <typename ...Targs>
-std::shared_ptr<Step> Session::MakeSharedStep(const std::string& strStepName, Targs... args)
-{
-    return(m_pWorker->MakeSharedStep(this, strStepName, std::forward<Targs>(args)...));
-}
-
-template <typename ...Targs>
-std::shared_ptr<Session> Session::MakeSharedSession(const std::string& strSessionName, Targs... args)
-{
-    return(m_pWorker->MakeSharedSession(this, strSessionName, std::forward<Targs>(args)...));
-}
-
-template <typename ...Targs>
-std::shared_ptr<Cmd> Session::MakeSharedCmd(const std::string& strCmdName, Targs... args)
-{
-    return(m_pWorker->MakeSharedStep(this, strCmdName, std::forward<Targs>(args)...));
-}
-
-template <typename ...Targs>
-std::shared_ptr<Module> Session::MakeSharedModule(const std::string& strModuleName, Targs... args)
-{
-    return(m_pWorker->MakeSharedSession(this, strModuleName, std::forward<Targs>(args)...));
-}
 
 } /* namespace neb */
 

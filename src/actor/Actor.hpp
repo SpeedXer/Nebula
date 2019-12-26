@@ -28,23 +28,28 @@
 #include "pb/http.pb.h"
 #include "util/json/CJsonObject.hpp"
 #include "channel/Channel.hpp"
+#include "labor/Labor.hpp"
+#include "ActorBuilder.hpp"
 
 namespace neb
 {
 
-class Worker;
-class WorkerImpl;
-class WorkerFriend;
+class Labor;
+class Dispatcher;
+class ActorBuilder;
+class ActorSys;
 
 class SocketChannel;
 class RedisChannel;
-class ActorCreator;
+class Actor;
 class Cmd;
 class Module;
 class Session;
 class Timer;
 class Context;
 class Step;
+class Model;
+class Chain;
 
 class Actor: public std::enable_shared_from_this<Actor>
 {
@@ -56,9 +61,12 @@ public:
         ACT_MODULE              = 2,        ///< Module对象，处理带url path的http请求
         ACT_SESSION             = 3,        ///< Session会话对象
         ACT_TIMER               = 4,        ///< 定时器对象
-        ACT_PB_STEP             = 5,        ///< Step步骤对象，处理pb请求或响应
-        ACT_HTTP_STEP           = 6,        ///< Step步骤对象，处理http请求或响应
-        ACT_REDIS_STEP          = 7,        ///< Step步骤对象，处理redis请求或响应
+        ACT_CONTEXT             = 5,        ///< 会话上下文对象
+        ACT_PB_STEP             = 6,        ///< Step步骤对象，处理pb请求或响应
+        ACT_HTTP_STEP           = 7,        ///< Step步骤对象，处理http请求或响应
+        ACT_REDIS_STEP          = 8,        ///< Step步骤对象，处理redis请求或响应
+        ACT_MODEL              = 9,        ///< Model模型对象，Model（IO无关）与Step（异步IO相关）共同构成功能链
+        ACT_CHAIN               = 10,       ///< Chain链对象，用于将Model和Step组合成功能链
     };
 
 public:
@@ -66,6 +74,13 @@ public:
     Actor(const Actor&) = delete;
     Actor& operator=(const Actor&) = delete;
     virtual ~Actor();
+
+    template <typename ...Targs> void Logger(int iLogLevel, const char* szFileName, unsigned int uiFileLine, const char* szFunction, Targs&&... args);
+    template <typename ...Targs> std::shared_ptr<Step> MakeSharedStep(const std::string& strStepName, Targs&&... args);
+    template <typename ...Targs> std::shared_ptr<Session> MakeSharedSession(const std::string& strSessionName, Targs&&... args);
+    template <typename ...Targs> std::shared_ptr<Context> MakeSharedContext(const std::string& strContextName, Targs&&... args);
+    template <typename ...Targs> std::shared_ptr<Chain> MakeSharedChain(const std::string& strChainName, Targs&&... args);
+    template <typename ...Targs> std::shared_ptr<Actor> MakeSharedActor(const std::string& strActorName, Targs&&... args);
 
     ACTOR_TYPE GetActorType() const
     {
@@ -77,15 +92,21 @@ public:
         return(m_strActorName);
     }
 
-protected:
+    const std::string& GetTraceId() const
+    {
+        return(m_strTraceId);
+    }
+
     uint32 GetSequence();
+
+protected:
     uint32 GetNodeId() const;
     uint32 GetWorkerIndex() const;
-    ev_tstamp GetDefaultTimeout() const;
     const std::string& GetNodeType() const;
     const std::string& GetWorkPath() const;
     const std::string& GetNodeIdentify() const;
     time_t GetNowTime() const;
+    ev_tstamp GetDataReportInterval() const;
 
     /**
      * @brief 获取Server自定义配置
@@ -96,6 +117,7 @@ protected:
     std::shared_ptr<Session> GetSession(uint32 uiSessionId);
     std::shared_ptr<Session> GetSession(const std::string& strSessionId);
     bool ExecStep(uint32 uiStepSeq, int iErrno = ERR_OK, const std::string& strErrMsg = "", void* data = NULL);
+    std::shared_ptr<Model> GetModel(const std::string& strModelName);
     std::shared_ptr<Context> GetContext();
     void SetContext(std::shared_ptr<Context> pContext);
     void AddAssemblyLine(std::shared_ptr<Session> pSession);
@@ -182,6 +204,15 @@ protected:
     bool SendTo(const std::string& strHost, int iPort);
 
     /**
+     * @brief 从worker发送到loader或从loader发送到worker
+     * @param iCmd 发送的命令字
+     * @param uiSeq 发送的数据包seq
+     * @param oMsgBody 数据包体
+     * @return 是否发送成功
+     */
+    bool SendTo(int32 iCmd, uint32 uiSeq, const MsgBody& oMsgBody);
+
+    /**
      * @brief 发送到下一个同一类型的节点
      * @note 发送到下一个同一类型的节点，适用于对同一类型节点做轮询方式发送以达到简单的负载均衡。
      * @param strNodeType 节点类型
@@ -206,6 +237,10 @@ protected:
 
     bool SendOriented(const std::string& strNodeType, int32 iCmd, uint32 uiSeq, const MsgBody& oMsgBody);
 
+    bool SendDataReport(int32 iCmd, uint32 uiSeq, const MsgBody& oMsgBody);
+
+    int32 GetStepNum() const;
+
 protected:
     virtual void SetActiveTime(ev_tstamp dActiveTime)
     {
@@ -223,31 +258,63 @@ protected:
     }
 
 private:
-    void SetWorker(Worker* pWorker);
-
+    void SetLabor(Labor* pLabor);
     ev_timer* MutableTimerWatcher();
-
     void SetActorName(const std::string& strActorName);
+    void SetTraceId(const std::string& strTraceId);
 
 private:
     ACTOR_TYPE m_eActorType;
-    uint32 m_ulSequence;
+    uint32 m_uiSequence;
     ev_tstamp m_dActiveTime;
     ev_tstamp m_dTimeout;
-    Worker* m_pWorker;
+    Labor* m_pLabor;
     ev_timer* m_pTimerWatcher;
     std::string m_strActorName;
     std::string m_strTraceId;       // for log trace
     std::shared_ptr<Context> m_pContext;
 
-    friend class WorkerImpl;
-    friend class WorkerFriend;
-    friend class Cmd;
-    friend class Module;
-    friend class Step;
-    friend class Session;
+    friend class Dispatcher;
+    friend class ActorBuilder;
+    friend class ActorSys;
+    friend class Chain;
 };
 
+template <typename ...Targs>
+void Actor::Logger(int iLogLevel, const char* szFileName, unsigned int uiFileLine, const char* szFunction, Targs&&... args)
+{
+    m_pLabor->GetActorBuilder()->Logger(m_strTraceId, iLogLevel, szFileName, uiFileLine, szFunction, std::forward<Targs>(args)...);
+}
+
+template <typename ...Targs>
+std::shared_ptr<Step> Actor::MakeSharedStep(const std::string& strStepName, Targs&&... args)
+{
+    return(m_pLabor->GetActorBuilder()->MakeSharedStep(this, strStepName, std::forward<Targs>(args)...));
+}
+
+template <typename ...Targs>
+std::shared_ptr<Session> Actor::MakeSharedSession(const std::string& strSessionName, Targs&&... args)
+{
+    return(m_pLabor->GetActorBuilder()->MakeSharedSession(this, strSessionName, std::forward<Targs>(args)...));
+}
+
+template <typename ...Targs>
+std::shared_ptr<Context> Actor::MakeSharedContext(const std::string& strContextName, Targs&&... args)
+{
+    return(m_pLabor->GetActorBuilder()->MakeSharedContext(this, strContextName, std::forward<Targs>(args)...));
+}
+
+template <typename ...Targs>
+std::shared_ptr<Actor> Actor::MakeSharedActor(const std::string& strActorName, Targs&&... args)
+{
+    return(m_pLabor->GetActorBuilder()->MakeSharedActor(this, strActorName, std::forward<Targs>(args)...));
+}
+
+template <typename ...Targs>
+std::shared_ptr<Chain> Actor::MakeSharedChain(const std::string& strChainName, Targs&&... args)
+{
+    return(m_pLabor->GetActorBuilder()->MakeSharedChain(this, strChainName, std::forward<Targs>(args)...));
+}
 
 } /* namespace neb */
 

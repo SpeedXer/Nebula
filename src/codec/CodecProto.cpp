@@ -29,7 +29,9 @@ E_CODEC_STATUS CodecProto::Encode(const MsgHead& oMsgHead, const MsgBody& oMsgBo
     int iHadWriteLen = 0;
     int iWriteLen = 0;
     int iNeedWriteLen = gc_uiMsgHeadSize;
-    iWriteLen = pBuff->Write(oMsgHead.SerializeAsString().c_str(), gc_uiMsgHeadSize);
+    std::string strTmpData;
+    oMsgHead.SerializeToString(&strTmpData);
+    iWriteLen = pBuff->Write(strTmpData.c_str(), gc_uiMsgHeadSize);
     if (iWriteLen != iNeedWriteLen)
     {
         LOG4_ERROR("buff write head iWriteLen != iNeedWriteLen!");
@@ -42,7 +44,8 @@ E_CODEC_STATUS CodecProto::Encode(const MsgHead& oMsgHead, const MsgBody& oMsgBo
         return(CODEC_STATUS_OK);
     }
     iNeedWriteLen = oMsgBody.ByteSize();
-    iWriteLen = pBuff->Write(oMsgBody.SerializeAsString().c_str(), oMsgBody.ByteSize());
+    oMsgBody.SerializeToString(&strTmpData);
+    iWriteLen = pBuff->Write(strTmpData.c_str(), oMsgBody.ByteSize());
     if (iWriteLen == iNeedWriteLen)
     {
         return(CODEC_STATUS_OK);
@@ -83,7 +86,7 @@ E_CODEC_STATUS CodecProto::Decode(CBuffer* pBuff, MsgHead& oMsgHead, MsgBody& oM
                 }
                 else
                 {
-                    LOG4_ERROR("cmd[%u], seq[%lu] oMsgBody.ParseFromArray() error!", oMsgHead.cmd(), oMsgHead.seq());
+                    LOG4_ERROR("cmd[%u], seq[%u] oMsgBody.ParseFromArray() error!", oMsgHead.cmd(), oMsgHead.seq());
                     return(CODEC_STATUS_ERR);
                 }
             }
@@ -94,7 +97,7 @@ E_CODEC_STATUS CodecProto::Decode(CBuffer* pBuff, MsgHead& oMsgHead, MsgBody& oM
         }
         else
         {
-            LOG4_ERROR("oMsgHead.ParseFromArray() error!");
+            LOG4_WARNING("oMsgHead.ParseFromArray() error!");   // maybe port scan from operation and maintenance system.
             return(CODEC_STATUS_ERR);
         }
     }

@@ -1,49 +1,48 @@
 English | [中文](/README_cn.md)     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Bwar's blog](https://www.bwar.tech).
-# Nebula : An event driven asynchronous C++ framework
-[![](https://travis-ci.org/Bwar/Nebula.svg?branch=master)](https://travis-ci.org/Bwar/Nebula) [![Author](https://img.shields.io/badge/author-@Bwar-blue.svg?style=flat)](cqc@vip.qq.com)  ![Platform](https://img.shields.io/badge/platform-Linux-green.svg?style=flat) [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)<br/>
+
+```
+    _   __     __          __
+   / | / /__  / /_  __  __/ /___ _
+  /  |/ / _ \/ __ \/ / / / / __ `/
+ / /|  /  __/ /_/ / /_/ / / /_/ /
+/_/ |_/\___/_.___/\__,_/_/\__,_/
+                                one-click installation 
+```
+# Nebula : a powerful framwork for building highly concurrent, distributed, and resilient message-driven applications for C++.
+[![](https://travis-ci.org/Bwar/Nebula.svg?branch=master)](https://travis-ci.org/Bwar/Nebula) [![Author](https://img.shields.io/badge/author-@Bwar-blue.svg?style=flat)](cqc@vip.qq.com)  ![Platform](https://img.shields.io/badge/platform-Linux-green.svg?style=flat) [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)<br/>
 
 1. [Overview](#Overview)
-2. [License](#License)
+2. [Features](#Features)
 3. [Getting Start](#GettingStart)
 4. [Documentation](#Documentation)
 5. [Depend on](#DependOn)
-6. [Related Project](#RelatedProject)
+6. [Main Projects](#MainProjects)
 7. [Todo list](#TODO)
 8. [Change log](#ChangeLog)
 
 <a name="Overview"></a>
 ## Overview 
 
-Nebula is an event-driven TCP protocol network framework developed in C++ language. It supports multiple application layer communication protocols including proto3, http, https, and websocket. The purpose of developing the Nebula framework is to provide a fast and high-performance distributed service cluster based on C++.
+Nebula is a flexible, high-performance business-oriented IoC distributed network framework developed in C++ language, designed for production environments. It supports multiple application layer communication protocols including proto3, http, https, and websocket. Nebula makes it easy to deploy a fast and high-performance distributed service with C++, while keeping the same server architecture and APIs. NebulaBootstrap provides out-of-the-box integration with Nebula service, but can be easily extended to serve other types of application.
 
 Nebula is a production level framework and distributed solution project for instant messaging, data collection, real-time computing, message push and other applications, as well as web api services. There were production applications for instant messaging, data acquisition and real-time analysis on line now, and a recommendation engine application for a large user base will be born soon. By the way, using Nebula for toy-level projects is also good for learning network communication. Bwar welcomes more developers to join the Nebula project. Nebula is a proactor development framework(a framework-implemented proactor, not an operating system support). The IO-intensive application on nebula with be good performance.
 
 Nebula can be used as a single high-performance TCP server, but building a cluster based on Nebula will be truly reflect its value. In order to build distributed service clusters quickly, Nebula Bootstrap cluster solutions including various types of services have been developed. 
 
-<a name="License"></a>
-## License 
-
-MIT License
-
->  Copyright (c) 2018 Bwar
->
->  Permission is hereby granted, free of charge, to any person obtaining a copy
->  of this software and associated documentation files (the "Software"), to deal
->  in the Software without restriction, including without limitation the rights
->  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
->  copies of the Software, and to permit persons to whom the Software is
->  furnished to do so, subject to the following conditions:
->
->  The above copyright notice and this permission notice shall be included in
->  all copies or substantial portions of the Software.
->
->  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
->  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
->  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
->  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
->  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
->  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
->  THE SOFTWARE.
+<a name="Features"></a>
+## Features
+* Protocol communication such as http, protobuf, websocket, etc.
+* Ssl connection encryption
+* Microservices framework
+* IoC container
+* Dynamic service update
+* Service registration and discovery
+* Service monitoring
+* Configuration management
+* Routing
+* Load balancing
+* Circuit Breakers
+* Leadership election and cluster state
 
 <a name="GettingStart"></a>
 ## Getting Start
@@ -53,10 +52,8 @@ MIT License
 
    build step：
 1. wget https://github.com/Bwar/NebulaBootstrap/archive/master.zip
-2. unzip master.zip; rm master.zip; mv NebulaBootstrap-master NebulaBootstrap
-3. cd NebulaBootstrap
-4. chmod u+x deploy.sh
-5. ./deploy.sh
+2. unzip master.zip; rm master.zip; mv NebulaBootstrap-master NebulaBootstrap; chmod u+x deploy.sh; chmod u+x deploy.sh
+3. ./deploy.sh
 
    Run deploy.sh, the NebulaBootstrap distributed services were build completed. The reliance of Nebula was also automatically downloaded and compiled by deploy from the Internet before the construction of Nebula. The deploy path as follows:
 * NebulaBootstrap
@@ -97,7 +94,7 @@ A simple testing can be start with a NebulaInterface only, and also can be start
 
 <a name="Documentation"></a>
 ## Documentation 
-   The complete documentation for Nebula is available: [Nebula documentation](https://bwar.github.io/Nebula) and [Nebula wiki](https://github.com/Bwar/Nebula/wiki)
+   The complete documentation for Nebula is available: [Nebula class reference](https://bwar.gitee.io/nebula) 
     
 <a name="DependOn"></a>
 ## Depend on 
@@ -108,8 +105,8 @@ A simple testing can be start with a NebulaInterface only, and also can be start
    * [http_parse](https://github.com/nodejs/http-parser) integrate into Nebula/src/util/http 
    * [CJsonObject](https://github.com/Bwar/CJsonObject) integrate into Nebula/src/util/json
 
-<a name="RelatedProject"></a>
-## Related Project
+<a name="MainProjects"></a>
+## Main Projects
    * [NebulaBootstrap](https://github.com/Bwar/NebulaBootstrap)
    * [NebulaBeacon](https://github.com/Bwar/NebulaBeacon)
    * [NebulaInterface](https://github.com/Bwar/NebulaInterface)
@@ -123,11 +120,20 @@ A simple testing can be start with a NebulaInterface only, and also can be start
 
 <a name="TODO"></a>
 ## Todo list 
+   - Complete writing user guide before September 2019.
    - NebulaMydis Data Agency Service.
    - Developing an IM with the Nebula.
 
 <a name="ChangeLog"></a>
 ## Change log 
+#### v0.10
+   - the plugin version control dynamically unloads and loads the instant validation feature.
+   - optimize reflection dynamic creation of Actor.
+#### v0.9
+   - add Model
+   - add Chain
+   - simplify Context
+   - optimize Actor
 #### v0.8
    - compatible with gcc4.8 compiler.
    - add cpu affinity inorder to support cpu binding.
